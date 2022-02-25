@@ -42,7 +42,7 @@ int main()
 	memset(&ServerAddr, 0, sizeof(ServerAddr));
 
 	ServerAddr.sin_family = AF_INET;
-	ServerAddr.sin_port = htons(60000);
+	ServerAddr.sin_port = htons(5001);
 	ServerAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(ServerSocket, (SOCKADDR*)&ServerAddr, sizeof(ServerAddr)) == SOCKET_ERROR)
@@ -60,31 +60,35 @@ int main()
 	}
 
 	//Accept
-	SOCKADDR_IN ClientAddr;
-
-	int ClientAddrSize = sizeof(ClientAddr);
-	SOCKET ClientSocket = 0;
-	ClientSocket = accept(ServerSocket, (SOCKADDR*)&ClientAddr, &ClientAddrSize);
-	if (ClientSocket == SOCKET_ERROR)
+	while (1)
 	{
-		cout << "Accept Error : " << GetLastError() << endl;
-		exit(-1);
+		SOCKADDR_IN ClientAddr;
+
+		int ClientAddrSize = sizeof(ClientAddr);
+		SOCKET ClientSocket = 0;
+		ClientSocket = accept(ServerSocket, (SOCKADDR*)&ClientAddr, &ClientAddrSize);
+		if (ClientSocket == SOCKET_ERROR)
+		{
+			cout << "Accept Error : " << GetLastError() << endl;
+			exit(-1);
+		}
+
+		cout << "connect ip : " << inet_ntoa(ClientAddr.sin_addr) << endl;
+		cout << "connect port : " << ntohs(ClientAddr.sin_port) << endl;
+
+		//recv
+		char Message[1024] = { 0, };
+		recv(ClientSocket, Message, 1024 - 1, 0);
+
+		cout << "client sended : " << Message << endl;
+		//send
+		send(ClientSocket, Message, strlen(Message) + 1, 0);
+
+		cout << "client send : " << Message << endl;
+		//소켓 닫기
+		closesocket(ClientSocket);
 	}
-	
-	cout << "connect ip : " << inet_ntoa(ClientAddr.sin_addr) << endl;
-	cout << "connect port : " << ntohs(ClientAddr.sin_port) << endl;
 
-	//recv
-	char Message[1024] = { 0, };
-	recv(ClientSocket, Message, 1024 - 1, 0);
-
-	cout << "client sended : " << Message << endl;
-	//send
-	send(ClientSocket, Message, strlen(Message) + 1, 0);
-
-	cout << "client send : " << Message << endl;
-	//소켓 닫기
-	closesocket(ClientSocket);
 	closesocket(ServerSocket);
 	
 	//윈속 종료
